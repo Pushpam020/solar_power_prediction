@@ -16,10 +16,10 @@ def load_artifacts():
     scaler_path = "scaler.pkl"
 
     if not os.path.exists(model_path):
-        st.error("❌ best_model.pkl not found. Please upload the trained model file.")
+        st.error(" best_model.pkl not found. Please upload the trained model file.")
         st.stop()
     if not os.path.exists(scaler_path):
-        st.error("❌ scaler.pkl not found. Please upload the fitted scaler file.")
+        st.error(" scaler.pkl not found. Please upload the fitted scaler file.")
         st.stop()
 
     model = joblib.load(model_path)
@@ -81,7 +81,7 @@ with col1:
 
 with col2:
     if st.button("✨ Reset to Defaults"):
-        st.experimental_rerun()
+        st.rerun()
 
 # ---------- Optional: Show current inputs table ----------
 with st.expander("🔧 See input as table"):
