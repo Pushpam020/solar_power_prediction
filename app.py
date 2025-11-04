@@ -1,6 +1,7 @@
-import streamlit as st
 import numpy as np
 import pandas as pd
+import streamlit as st
+import matplotlib.pyplot as plt
 import joblib
 import os
 
@@ -64,6 +65,29 @@ with col1:
     if st.button("🔮 Predict"):
         pred = predict_power(user_vals)
         st.success(f"Estimated Power Generated: **{pred:,.0f}** units")
+st.subheader("🔆 Power Generation Visualization")
+
+# Bar Chart of Predicted Power
+fig, ax = plt.subplots(figsize=(6, 1.8))
+ax.barh(["Predicted Power"], [pred], color="#f4c542")
+ax.set_xlabel("Power (Units)")
+ax.set_xlim(0, max(pred * 1.5, 5000))  # auto-scale axis
+ax.bar_label(ax.containers[0], fmt='%d', label_type='center', color='black', fontsize=10)
+st.pyplot(fig)
+
+# Simple Comparison Line (trend example)
+st.markdown("#####  Power Comparison Trend")
+trend_values = np.array([pred * 0.8, pred * 0.9, pred])  # sample history-like trend
+st.line_chart(trend_values)
+
+# Optional Text Interpretation
+if pred < 2000:
+    st.info("⚡Prediction indicates **low to moderate power generation** under the current weather conditions.")
+elif 2000 <= pred < 4000:
+    st.success("🌞 Prediction indicates **good power generation** — favorable sunlight conditions!")
+else:
+    st.balloons()
+    st.success("Excellent solar output predicted — ideal conditions for maximum generation!")
 
 with col2:
     if st.button("✨ Reset to Defaults"):
