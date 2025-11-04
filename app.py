@@ -104,7 +104,7 @@ with st.expander("🔧 See input as table"):
 st.markdown("""
 ---
 **Notes**
-- This app uses the same scaler and model you trained (e.g., Gradient Boosting/XGBoost).
+- This app uses the same scaler and model I trained (e.g., Gradient Boosting/XGBoost).
 - Feature order must match training:  
 `distance-to-solar-noon, temperature, wind-direction, wind-speed, sky-cover, visibility, humidity, average-wind-speed-(period), average-pressure-(period)`.
 """)
