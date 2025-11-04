@@ -72,10 +72,3 @@ with col2:
 with st.expander("🔧 See input as table"):
     st.dataframe(pd.DataFrame([user_vals]))
 
-st.markdown("""
----
-**Notes**
-- Make sure `best_model.pkl` and `scaler.pkl` are in the same folder.
-- Feature order must match training:  
-`distance-to-solar-noon, temperature, wind-direction, wind-speed, sky-cover, visibility, humidity, average-wind-speed-(period), average-pressure-(period)`.
-""")
