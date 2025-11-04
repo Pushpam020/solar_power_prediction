@@ -6,7 +6,7 @@ import os
 
 st.set_page_config(page_title="Solar Power Prediction", page_icon="🔆", layout="centered")
 
-st.title("🔆 Solar Power Generation Predictor")
+st.title("Solar Power Generation Predictor")
 st.write("Enter the weather parameters below and get predicted **power-generated**.")
 
 @st.cache_resource
@@ -14,10 +14,10 @@ def load_artifacts():
     model_path = "best_model.pkl"
     scaler_path = "scaler.pkl"
     if not os.path.exists(model_path):
-        st.error("❌ best_model.pkl not found. Please upload the trained model file to this folder or your repo.")
+        st.error("best_model.pkl not found. Please upload the trained model file to this folder or your repo.")
         st.stop()
     if not os.path.exists(scaler_path):
-        st.error("❌ scaler.pkl not found. Please upload the fitted scaler file to this folder or your repo.")
+        st.error("scaler.pkl not found. Please upload the fitted scaler file to this folder or your repo.")
         st.stop()
     model = joblib.load(model_path)
     scaler = joblib.load(scaler_path)
