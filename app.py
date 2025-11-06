@@ -4,7 +4,6 @@ import pandas as pd
 import joblib
 import os
 import matplotlib.pyplot as plt
-from datetime import datetime
 
 # ---------------------------------------------------
 # Page configuration
@@ -12,7 +11,7 @@ from datetime import datetime
 st.set_page_config(page_title="Solar Power Generation Predictor", page_icon="🔆", layout="centered")
 
 # ---------------------------------------------------
-# Helper: map prediction to level + color
+# Helper Function (for color logic)
 # ---------------------------------------------------
 def power_level_and_color(pred: float):
     if pred < 2000:
@@ -23,21 +22,20 @@ def power_level_and_color(pred: float):
         return "High", "#4cd137"      # green
 
 # ---------------------------------------------------
-# Title & intro
+# Title & Intro
 # ---------------------------------------------------
 st.title("🔆 Solar Power Generation Predictor")
 st.write("Enter the weather parameters below and get predicted **power-generated.**")
-st.markdown("### Enter values and click Predict")
 
 # ---------------------------------------------------
-# Load model and scaler
+# Load Model and Scaler
 # ---------------------------------------------------
 @st.cache_resource
 def load_artifacts():
     model_path = "best_model.pkl"
     scaler_path = "scaler.pkl"
     if not os.path.exists(model_path) or not os.path.exists(scaler_path):
-        st.error(" Model or scaler file missing. Please upload `best_model.pkl` and `scaler.pkl`.")
+        st.error("❌ Model or scaler file missing. Please upload `best_model.pkl` and `scaler.pkl`.")
         st.stop()
     model = joblib.load(model_path)
     scaler = joblib.load(scaler_path)
@@ -46,7 +44,7 @@ def load_artifacts():
 model, scaler = load_artifacts()
 
 # ---------------------------------------------------
-# Features (order must match training)
+# Features
 # ---------------------------------------------------
 FEATURES = [
     "distance-to-solar-noon",
@@ -59,44 +57,6 @@ FEATURES = [
     "average-wind-speed-(period)",
     "average-pressure-(period)"
 ]
-
-# ---------------------------------------------------
-# Session state for prediction
-# ---------------------------------------------------
-if "pred" not in st.session_state:
-    st.session_state.pred = None
-
-# ---------------------------------------------------
-# TOP SUMMARY CARD (shows current status if predicted)
-# ---------------------------------------------------
-status_container = st.container()
-with status_container:
-    st.markdown("<br>", unsafe_allow_html=True)  # small spacing
-    if st.session_state.pred is not None:
-        level, color = power_level_and_color(st.session_state.pred)
-        st.markdown(f"""
-        <div style="
-            border-radius:12px;
-            padding:14px 16px;
-            background:{color}22;
-            border:1px solid {color};
-            display:flex; align-items:center; gap:10px;">
-            <div style="width:10px; height:10px; border-radius:50%; background:{color};"></div>
-            <div style="font-weight:600;">Current Prediction Status:
-                <span style="color:{color}">{level}</span>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-    else:
-        st.markdown("""
-        <div style="
-            border-radius:12px;
-            padding:14px 16px;
-            background:#eeeeee22;
-            border:1px solid #cccccc;">
-            <strong>Current Prediction Status:</strong> No prediction yet — enter inputs and click <em>Predict</em>.
-        </div>
-        """, unsafe_allow_html=True)
 
 # ---------------------------------------------------
 # Sidebar Inputs
@@ -120,35 +80,20 @@ def sidebar_inputs():
 user_vals = sidebar_inputs()
 
 # ---------------------------------------------------
-# Predict / Reset
+# Predict / Reset Buttons
 # ---------------------------------------------------
+if "pred" not in st.session_state:
+    st.session_state.pred = None
+
 c1, c2 = st.columns(2)
 
 with c1:
     if st.button("🔮 Predict", use_container_width=True):
-        # Build input row in the same feature order
         row = pd.DataFrame([[user_vals[f] for f in FEATURES]], columns=FEATURES)
-
-        # Scale the new inputs
         X_scaled = scaler.transform(row)
-
-        # Predict fresh every click
         pred = float(model.predict(X_scaled)[0])
         st.session_state.pred = pred
-
-        # Show output
         st.success(f"Estimated Power Generated: **{pred:,.0f}** units")
-
-        # Timestamp of prediction
-        timestamp = datetime.now().strftime("%d-%b-%Y %I:%M:%S %p")
-        st.caption(f"🕒 Last Updated: {timestamp}")
-
-        # Debug info (expand when testing; remove later if you want)
-        with st.expander("🔍 Debug Info (for testing)"):
-            st.write("**Input values:**")
-            st.dataframe(row)
-            st.write("**Scaled values:**")
-            st.dataframe(pd.DataFrame(X_scaled, columns=FEATURES))
 
 with c2:
     if st.button("✨ Reset to Defaults", use_container_width=True):
@@ -156,29 +101,22 @@ with c2:
         st.rerun()
 
 # ---------------------------------------------------
-# Show inputs table (for transparency)
-# ---------------------------------------------------
-with st.expander("🔧 See input as table"):
-    st.dataframe(pd.DataFrame([user_vals]))
-
-# ---------------------------------------------------
-# Notes
+# Notes Section
 # ---------------------------------------------------
 st.markdown("""
 ---
 **Notes**
-- This app uses the same scaler and model you trained (e.g., Gradient Boosting/XGBoost).
-- Feature order must match training:  
-`distance-to-solar-noon, temperature, wind-direction, wind-speed, sky-cover, visibility, humidity, average-wind-speed-(period), average-pressure-(period)`.
+- This app uses the trained Gradient Boosting model and StandardScaler.
+- Feature order must match the training sequence.
 """)
 
 # ---------------------------------------------------
-# About + Input Help
+# About & Input Help
 # ---------------------------------------------------
 with st.expander("ℹ️ About this app"):
     st.markdown("""
 - **Goal:** Forecast solar power from weather parameters using a trained regression model.  
-- **Model Used:** Gradient Boosting (best performance, R² ≈ 0.90).  
+- **Model Used:** Gradient Boosting (R² ≈ 0.90).  
 - **Preprocessing:** Standardization via `StandardScaler`.  
 - **Deployment:** Streamlit Cloud.  
 - **How to use:** Adjust inputs on the left → click **Predict** → view power output.
@@ -187,25 +125,23 @@ with st.expander("ℹ️ About this app"):
 with st.expander("❓ What do the inputs mean?"):
     st.markdown("""
 - **distance-to-solar-noon (0–1):** 0 = near noon (more sunlight).  
-- **temperature (°F):** Higher temperature (under clear skies) → more power.  
-- **wind-direction (deg):** Helps capture air movement patterns (minor effect).  
-- **wind-speed (mph):** Moderate wind cools panels → can slightly improve efficiency.  
-- **sky-cover (0–100):** Higher value = cloudier sky → less sunlight.  
-- **visibility (miles):** Clearer air = higher solar intensity.  
-- **humidity (%):** Higher moisture absorbs light → reduces power output.  
+- **temperature (°F):** Higher temperature → more power.  
+- **wind-speed (mph):** Moderate wind helps cool panels.  
+- **sky-cover (0–100):** More clouds → less sunlight.  
+- **visibility (miles):** Clearer sky → higher solar intensity.  
+- **humidity (%):** High humidity absorbs light → reduces power output.  
 """)
 
 # ---------------------------------------------------
-# Visualization (color-coded categories) – only after prediction
+# Visualization (Bar + Trend + Legend)
 # ---------------------------------------------------
 if st.session_state.pred is not None:
     pred = st.session_state.pred
-    st.subheader("🌞 Power Generation Visualization")
-
-    # Category thresholds
     level, color = power_level_and_color(pred)
 
-    # Bar chart
+    st.subheader("🌞 Power Generation Visualization")
+
+    # Bar Chart
     fig, ax = plt.subplots(figsize=(6, 1.8))
     ax.barh(["Predicted Power"], [pred], color=color)
     ax.set_xlabel("Power (Units)")
@@ -216,7 +152,7 @@ if st.session_state.pred is not None:
         pass
     st.pyplot(fig)
 
-    # Category label + message
+    # Text based on Power Level
     st.markdown(f"### ⚡ Power Level: **{level}**")
     if level == "Low":
         st.warning("🌥️ Prediction indicates **low power generation** under current weather conditions.")
@@ -226,7 +162,7 @@ if st.session_state.pred is not None:
         st.success("☀️ Prediction indicates **high power generation** — ideal conditions for solar output!")
         st.balloons()
 
-    # Color Legend (Low–Moderate–High)
+    # Legend Strip
     st.markdown("""
     <div style='display:flex; justify-content:space-evenly; text-align:center; margin-top:15px;'>
         <div style='background-color:#ff6b6b; width:60px; height:15px; border-radius:5px;'></div>
@@ -240,7 +176,7 @@ if st.session_state.pred is not None:
     </div>
     """, unsafe_allow_html=True)
 
-    # Mini trend line
+    # Mini Trend Chart
     st.markdown("##### 📈 Power Comparison Trend")
     trend_values = np.array([pred * 0.8, pred * 0.9, pred])
     st.line_chart(trend_values)
@@ -249,4 +185,4 @@ if st.session_state.pred is not None:
 # Footer
 # ---------------------------------------------------
 st.markdown("---")
-st.caption("👩‍💻 Built by Pushpam K. Kumari • Model: Gradient Boosting • Deployed on Streamlit Cloud 🌐")
+st.caption("👩‍💻 Built by Pushpam K. Kumari | Model: Gradient Boosting | Deployed on Streamlit Cloud 🌐")
