@@ -193,4 +193,4 @@ if st.session_state.pred is not None:
 # Footer
 # ---------------------------------------------------
 st.markdown("---")
-st.caption("👩‍💻 Built by Pushpam • Model: Gradient Boosting • Deployed on Streamlit Cloud 🌐")
+st.caption("👩‍💻 Built by Pushpam K. Kumari • Model: Gradient Boosting • Deployed on Streamlit Cloud 🌐")
